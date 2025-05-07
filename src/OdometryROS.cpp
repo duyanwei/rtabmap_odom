@@ -102,6 +102,7 @@ void OdometryROS::onInit()
 	ros::NodeHandle & nh = getNodeHandle();
 	ros::NodeHandle & pnh = getPrivateNodeHandle();
 
+	posePub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1);
 	odomPub_ = nh.advertise<nav_msgs::Odometry>("odom", 1);
 	odomInfoPub_ = nh.advertise<rtabmap_msgs::OdomInfo>("odom_info", 1);
 	odomInfoLitePub_ = nh.advertise<rtabmap_msgs::OdomInfo>("odom_info_lite", 1);
@@ -730,6 +731,27 @@ void OdometryROS::mainLoop()
 			{
 				tfBroadcaster_.sendTransform(poseMsg);
 			}
+		}
+
+		// Publish pose.
+		{
+			geometry_msgs::PoseWithCovarianceStamped msg;
+			msg.header.stamp = header.stamp; // use corresponding time stamp to image
+			msg.header.frame_id = odomFrameId_;
+			msg.pose.pose.position.x = poseMsg.transform.translation.x;
+			msg.pose.pose.position.y = poseMsg.transform.translation.y;
+			msg.pose.pose.position.z = poseMsg.transform.translation.z;
+			msg.pose.pose.orientation = poseMsg.transform.rotation;
+
+			//set covariance
+			// libviso2 uses approximately vel variance * 2
+			msg.pose.covariance.at(0) = info.reg.covariance.at<double>(0,0)*2;  // xx
+			msg.pose.covariance.at(7) = info.reg.covariance.at<double>(1,1)*2;  // yy
+			msg.pose.covariance.at(14) = info.reg.covariance.at<double>(2,2)*2; // zz
+			msg.pose.covariance.at(21) = info.reg.covariance.at<double>(3,3)*2; // rr
+			msg.pose.covariance.at(28) = info.reg.covariance.at<double>(4,4)*2; // pp
+			msg.pose.covariance.at(35) = info.reg.covariance.at<double>(5,5)*2; // yawyaw
+			posePub_.publish(msg);
 		}
 
 		if(odomPub_.getNumSubscribers())

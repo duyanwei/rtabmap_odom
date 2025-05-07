@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <std_srvs/Empty.h>
 #include <std_msgs/Header.h>
 #include <sensor_msgs/Imu.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <diagnostic_updater/diagnostic_updater.h>
 
@@ -124,6 +125,7 @@ private:
 	bool publishCompressedSensorData_;
 	rtabmap::ParametersMap parameters_;
 
+	ros::Publisher posePub_;
 	ros::Publisher odomPub_;
 	ros::Publisher odomInfoPub_;
 	ros::Publisher odomInfoLitePub_;
