@@ -192,6 +192,7 @@ private:
 
 	std::ofstream f_realtime_tracking_;
 	std::ofstream f_latency_;
+	double transform_timeout_ = 0.0;
 };
 
 }

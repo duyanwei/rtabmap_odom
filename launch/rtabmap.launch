@@ -116,8 +116,10 @@
   <arg name="visual_odometry"          default="true"/>          <!-- Launch rtabmap visual odometry node -->
   <arg name="icp_odometry"             default="false"/>         <!-- Launch rtabmap icp odometry node -->
   <arg name="odom_topic"               default="odom"/>          <!-- Odometry topic name -->
+  <arg name="pose_topic"               default="pose"/>          <!-- Pose topic name -->
   <arg name="vo_frame_id"              default="$(arg odom_topic)"/> <!-- Visual/Icp odometry frame ID for TF -->
   <arg name="publish_tf_odom"          default="true"/>
+  <arg name="transform_timeout_odom"   default="0.0"/>
   <arg name="odom_tf_angular_variance" default="0.001"/>         <!-- If TF is used to get odometry, this is the default angular variance -->
   <arg name="odom_tf_linear_variance"  default="0.001"/>         <!-- If TF is used to get odometry, this is the default linear variance -->
   <arg name="odom_args"                default=""/>              <!-- More arguments for odometry (overwrite same parameters in rtabmap_args) -->
@@ -278,10 +280,12 @@
           <remap from="rgbd_image"             to="$(arg rgbd_topic_relay)"/>
           <remap from="odom"                   to="$(arg odom_topic)"/>
           <remap from="imu"                    to="$(arg imu_topic)"/>
+          <remap from="pose"                   to="$(arg pose_topic)"/>
 
           <param name="frame_id"                    type="string" value="$(arg frame_id)"/>
           <param name="odom_frame_id"               type="string" value="$(arg vo_frame_id)"/>
           <param name="publish_tf"                  type="bool"   value="$(arg publish_tf_odom)"/>
+          <param name="transform_timeout"           type="double" value="$(arg transform_timeout_odom)"/>
           <param name="ground_truth_frame_id"       type="string" value="$(arg ground_truth_frame_id)"/>
           <param name="ground_truth_base_frame_id"  type="string" value="$(arg ground_truth_base_frame_id)"/>
           <param name="wait_for_transform_duration" type="double" value="$(arg wait_for_transform)"/>

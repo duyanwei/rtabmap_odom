@@ -155,6 +155,7 @@ void OdometryROS::onInit()
 	pnh.param("sensor_data_parallel_compression", compressionParallelized_, compressionParallelized_);
 
 	pnh.param("wait_imu_to_init", waitIMUToinit_, waitIMUToinit_);
+	pnh.param("transform_timeout", transform_timeout_, transform_timeout_);
 
 	{
 		std::string output_prefix;
@@ -722,7 +723,7 @@ void OdometryROS::mainLoop()
 				geometry_msgs::TransformStamped correctionMsg;
 				correctionMsg.child_frame_id = guessFrameId_;
 				correctionMsg.header.frame_id = odomFrameId_;
-				correctionMsg.header.stamp = header.stamp;
+				correctionMsg.header.stamp = header.stamp + ros::Duration(transform_timeout_);
 				Transform correction = pose * guessCurrentPose.inverse();
 				rtabmap_conversions::transformToGeometryMsg(correction, correctionMsg.transform);
 				tfBroadcaster_.sendTransform(correctionMsg);
