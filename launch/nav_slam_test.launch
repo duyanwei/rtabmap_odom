@@ -50,12 +50,12 @@ Examples:
 <arg name="rtabmap_viz" default="false"/>
 <arg name="rviz" default="false"/>
 
-<arg name="imu_filter_topic" default="/imu0"/>
-<arg unless="$(eval test_type == 'gazebo')" name="imu_filter_topic" value="/camera/imu" />
+<arg if="$(eval test_type == 'gazebo')" name="imu_raw_topic" default="/imu0"/>
+<arg unless="$(eval test_type == 'gazebo')" name="imu_raw_topic" value="/camera/imu" />
 
 <node pkg="imu_complementary_filter" type="complementary_filter_node" name="imu_filter" output="screen">
    <!-- <remap from="imu/data_raw" to="/imu0"/> -->
-   <remap from="imu/data_raw" to="$(arg imu_filter_topic)"/>
+   <remap from="imu/data_raw" to="$(arg imu_raw_topic)"/>
    <param name="use_mag" value="false"/>
    <param name="world_frame" value="enu"/>
    <param name="publish_tf" value="false"/>
