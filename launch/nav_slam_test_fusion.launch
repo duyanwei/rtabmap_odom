@@ -118,7 +118,7 @@
       <param name="odom_frame" value="odom"/>
       <param name="base_link_frame" value="$(arg frame_id)"/>
       <param name="world_frame" value="odom"/>
-      <param name="publish_tf"  value="false"/>
+      <param name="publish_tf"  value="true"/>
 
       <param name="transform_time_offset" value="0.0"/>
 
