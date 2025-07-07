@@ -17,6 +17,7 @@ from sensor_msgs.msg import Image
 import tf2_ros
 import os
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 
 class PosePublisher:
@@ -28,9 +29,12 @@ class PosePublisher:
         self.pose_freq = rospy.get_param("~pose_frequency", 30.0)
         self.timeout = 600.0  # seconds
         self.cam_sub = rospy.Subscriber("/left_cam_topic", Image, self.image_callback)
-        self.visual_map_frame = "visual_map"
+        self.visual_map_frame = rospy.get_param("~map_frame", "visual_map")
         # self.camera_frame = "cam0"
         self.camera_frame = rospy.get_param("~camera_frame", "cam0")
+        self.invert_tf = rospy.get_param("~invert_tf", False)
+        self.Tbc = np.eye(4)
+        self.Tbc[:3, :3] = np.linalg.inv(Rotation.from_quat([0.500000, -0.500000, 0.500000, -0.500000]).as_matrix())
         
         # Check if file exists
         if not os.path.exists(self.pose_file):
@@ -64,6 +68,7 @@ class PosePublisher:
     def image_callback(self, msg):
         for index in range(self.current_pose_index, len(self.poses)):
             pose = self.poses[index]
+            pose = self.__pose_transform(pose)
             diff = msg.header.stamp.to_sec() - pose[0]
             if np.abs(diff) < 1e-6:
                 msg = Odometry()
@@ -87,9 +92,15 @@ class PosePublisher:
                 self.pub.publish(msg)
 
                 t = TransformStamped()
-                t.header.stamp = msg.header.stamp - rospy.Duration.from_sec(0.5)
                 t.header.frame_id = self.visual_map_frame
                 t.child_frame_id = self.camera_frame
+                if self.invert_tf:
+                    pose = self.__pose_inverse(pose)
+                    t.header.frame_id = self.camera_frame
+                    t.child_frame_id = self.visual_map_frame
+                t.header.stamp = msg.header.stamp
+                print(t.header.stamp.to_sec())
+                # - rospy.Duration.from_sec(0.5)
                 t.transform.translation.x = pose[1]
                 t.transform.translation.y = pose[2]
                 t.transform.translation.z = pose[3]
@@ -103,6 +114,29 @@ class PosePublisher:
 
                 self.current_pose_index = index + 1
                 break
+
+
+    def __pose_inverse(self, pose):
+        mat = np.eye(4)
+        mat[:3, :3] = Rotation.from_quat(pose[4:]).as_matrix()
+        mat[:3, 3] = pose[1:4]
+        inv_mat = np.linalg.inv(mat)
+        inv_pose = np.zeros(8)
+        inv_pose[0] = pose[0]
+        inv_pose[1:4] = inv_mat[:3, 3]
+        inv_pose[4:] = Rotation.from_matrix(inv_mat[:3, :3]).as_quat()
+        return inv_pose
+    
+    def __pose_transform(self, pose):
+        mat = np.eye(4)
+        mat[:3, :3] = Rotation.from_quat(pose[4:]).as_matrix()
+        mat[:3, 3] = pose[1:4]
+        inv_mat = mat @ self.Tbc
+        inv_pose = np.zeros(8)
+        inv_pose[0] = pose[0]
+        inv_pose[1:4] = inv_mat[:3, 3]
+        inv_pose[4:] = Rotation.from_matrix(inv_mat[:3, :3]).as_quat()
+        return inv_pose
 
 
     def wait_for_subscriber(self):
