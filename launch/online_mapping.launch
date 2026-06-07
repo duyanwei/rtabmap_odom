@@ -4,10 +4,9 @@
 <!--This launch file uses posed images for mapping without loop closure-->
 
   <param name="use_sim_time" value="true"/>
+  <arg name="compressed"     default="false"/>
 
   <arg name="bagfile"  default=""/>
-  <!-- <arg name="pose_file" default="/mnt/IVALAB/rosbags/tsrb/20250331/manual_mapping/gfgg_result/path4_AllFrameTrajectory.txt"/> -->
-  <arg name="pose_file" default="/mnt/IVALAB/rosbags/tsrb/GW_CL_SEQS/20250912_3/gw/tsrb_AllFrameTrajectory.txt"/>
   <arg name="odom_topic" default="/rtabmap/odom"/>
   <arg name="camera_frame" default="camera_color_optical_frame"/>
   <arg name="base_frame" default="base_link"/>
@@ -26,8 +25,11 @@
     <node pkg="rosbag" type="play" name="rosbag" output="screen" args="--clock $(arg bagfile) /tf:=/tf_dummy /tf_static:=/tf_static_dummy"/>
   </group>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_cam" args="0 0 0 -1.570796 0 -1.570796 $(arg base_frame) $(arg camera_frame) 10"/>
-  <node pkg="tf" type="static_transform_publisher" name="color_to_depth" args="0 0 0 0 0 0 $(arg camera_frame) camera_depth_optical_frame 10"/>
+  <node if="$(arg compressed)" name="republish_cam_color" type="republish" pkg="image_transport" output="screen" args="compressed in:=/camera/color/image_raw raw out:=/camera/color/image_raw" />
+  <node if="$(arg compressed)" name="republish_cam_depth" type="republish" pkg="image_transport" output="screen" args="compressedDepth in:=/camera/depth/image_rect_raw raw out:=/camera/depth/image_rect_raw" />
+
+  <!-- <node pkg="tf" type="static_transform_publisher" name="base_link_cam" args="0 0 0 -1.570796 0 -1.570796 $(arg base_frame) $(arg camera_frame) 10"/> -->
+  <!-- <node pkg="tf" type="static_transform_publisher" name="color_to_depth" args="0 0 0 0 0 0 $(arg camera_frame) camera_depth_optical_frame 10"/> -->
   <!-- <node pkg="tf" type="static_transform_publisher" name="cam_base_link" args="0 0 0 1.570796 -1.570796 0 cam0 base_link 10"/> -->
   <!-- <node pkg="tf" type="static_transform_publisher" name="map_to_visual_map" args="0 0 0 -1.570796 0 -1.570796 map visual_map 10"/> -->
 
@@ -47,7 +49,9 @@
     <arg name="depth_camera_info_topic" value="/camera/depth/camera_info" />
 
     <!-- <arg name="frame_id" value="$(arg camera_frame)"/> -->
-    <arg name="frame_id" value="base_link"/>
+    <arg name="frame_id"      value="base_link"/>
+    <arg name="map_frame_id"  value="map"/>
+    <arg name="odom_frame_id" value="odom"/>
     <arg name="wait_for_transform" value="0.1"/>
     <arg if="$(arg record_ground_truth)" name="ground_truth_frame_id" value="world"/>
     <arg if="$(arg record_ground_truth)" name="ground_truth_base_frame_id" value="base_link_gt"/>
@@ -64,13 +68,12 @@
 
 
   <!-- pose publisher node -->
-  <node name="pose_publisher" pkg="rtabmap_odom" type="pose_publisher.py" output="screen">
+  <!-- <node name="pose_publisher" pkg="rtabmap_odom" type="pose_publisher.py" output="screen">
     <remap from="/odom" to="$(arg odom_topic)" />
     <remap from="/left_cam_topic" to="/camera/color/image_raw"/>
     <param name="~pose_file" value="$(arg pose_file)"/>
     <param name="~map_frame" value="odom" />
     <param name="~camera_frame" value="$(arg base_frame)"/>
-  </node>
-
+  </node> -->
 
 </launch>

@@ -40,3 +40,12 @@ python Run_EuRoC_Stereo_ROS.py
 - RealWorld
   - Disable odom->base_link on turtlebot2
 `set publish_tf to false` at line 23 in the following launch [file](https://github.com/ivalab/task_driven_slam_benchmarking/launch/realworld/minimal.launch).
+
+
+
+#### Mapping Visualization with RTABMAP (NO LC)
+- To use the rtabmap mapping visualization tool, it is better to publish the `odom/pose` in `odom->base_link`, and provide the `tf` of `base_link` to `camera_optical_frame`.
+
+- Publish pose in camera frame also works, e.g. `visual_map->camera_optical_frame`, however it does not allow to truncate the stitched pointcloud in robot-body aligned frame, where the values are defined in. 
+
+- The mapping launch file disables loop closure detection of RTABMAP, and only stitches rgbd images with provided poses.

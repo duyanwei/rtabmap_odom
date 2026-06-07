@@ -35,6 +35,7 @@ class PosePublisher:
         self.invert_tf = rospy.get_param("~invert_tf", False)
         self.Tbc = np.eye(4)
         self.Tbc[:3, :3] = np.linalg.inv(Rotation.from_quat([0.500000, -0.500000, 0.500000, -0.500000]).as_matrix())
+        self.Tcb = np.linalg.inv(self.Tbc)
         
         # Check if file exists
         if not os.path.exists(self.pose_file):
@@ -69,6 +70,7 @@ class PosePublisher:
         for index in range(self.current_pose_index, len(self.poses)):
             pose = self.poses[index]
             pose = self.__pose_transform(pose)
+            pose[3] = 0.2
             diff = msg.header.stamp.to_sec() - pose[0]
             if np.abs(diff) < 1e-6:
                 msg = Odometry()
@@ -99,7 +101,7 @@ class PosePublisher:
                     t.header.frame_id = self.camera_frame
                     t.child_frame_id = self.visual_map_frame
                 t.header.stamp = msg.header.stamp
-                print(t.header.stamp.to_sec())
+                # print(t.header.stamp.to_sec())
                 # - rospy.Duration.from_sec(0.5)
                 t.transform.translation.x = pose[1]
                 t.transform.translation.y = pose[2]
@@ -131,7 +133,7 @@ class PosePublisher:
         mat = np.eye(4)
         mat[:3, :3] = Rotation.from_quat(pose[4:]).as_matrix()
         mat[:3, 3] = pose[1:4]
-        inv_mat = mat @ self.Tbc
+        inv_mat = self.Tcb @ mat @ self.Tbc
         inv_pose = np.zeros(8)
         inv_pose[0] = pose[0]
         inv_pose[1:4] = inv_mat[:3, 3]
