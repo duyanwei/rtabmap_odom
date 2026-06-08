@@ -269,6 +269,7 @@
           <param name="expected_update_rate"        type="double" value="$(arg odom_expected_rate)"/>
           <param name="max_update_rate"             type="double" value="$(arg odom_max_rate)"/>
           <param name="keep_color"                  type="bool"   value="$(arg use_odom_features)"/>
+          <param name="output_prefix"               type="string" value="$(arg output_prefix)"/>
         </node>
 
         <!-- Stereo Odometry -->
